@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: ["--http_port", "8222", "--jetstream"]
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  livekit:
+    image: livekit/livekit-server:latest
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    environment:
+      LIVEKIT_KEYS: "devkey: secret"
+
+  mesh-server:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_URL: redis://redis:6379
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+      AUTH_SECRET: change-me-in-production
+    depends_on:
+      - nats
+      - redis
+      - livekit
